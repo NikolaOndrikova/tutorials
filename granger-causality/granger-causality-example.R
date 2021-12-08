@@ -11,10 +11,6 @@ library(vars)
 library(aod)
 library(aTSA)
 
-#library(lmtest)
-#library(fUnitRoots)
-#library(urca)
-#library(zoo)
 
 ### import data
 climate_df <- read.csv("./google-trends-granger-causality.csv")
@@ -42,21 +38,22 @@ stacionarise <- function(vec){
   return(stl_remain)
 }
 
-###
+### clean time series
 stationary_data = apply(climate_df[,2:3], MARGIN = 2, FUN = stacionarise)
 
 plot(stationary_data[,1], type="l")
 lines(stationary_data[,2])
 
-# Estimation of a VAR by utilising OLS per equation
+### estimation of a VAR by utilising OLS per equation, p=6 is number of lags, but you can experiment with different values
 set.seed(12345)
 V.6 <-VAR(stationary_data, p=6 ,type="both")
 
-#Stability analysis 
+### stability analysis 
 cat(1/roots(V.6)[[1]], " *Shoud be > 1, if stable.", "\n")
 
 print(summary(V.6))
 
+### answering the main question - what is causing what?
 climateChange_heatWave <- wald.test(b=coef(V.6$varresult[[1]]), Sigma=vcov(V.6$varresult[[1]]), 
                                     Terms=c(2,4,6,8,10))
 
